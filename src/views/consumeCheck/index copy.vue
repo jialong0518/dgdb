@@ -153,53 +153,28 @@
     </div>
   <el-dialog title="添加产品" style="overflow: hidden;" :close-on-click-modal="false" :show-close="false" :visible.sync="dialogAccountVisible">
   <div style="overflow: hidden;">
-    <el-form :model="form" :inline="true" :rules="rulesAccount" ref="ruleForm" label-width="50px" style="float:left;width:50%;">
-        <!--
-          <el-form-item label="产品分类" prop="productType">
-            <el-select style="width: 150px" :disabled="titleForm.indexOf('查看')!== -1" @change="productSelect" v-model="form.productType" placeholder="请选择产品">
-                <el-option
-                v-for="item in productTypeData"
-                :key="item.name"
-                :label="item.name"
-                :value="item.name">
-                </el-option>
-            </el-select>
-          </el-form-item>
-         -->
-        
+    <el-form :model="form" :rules="rulesAccount" ref="ruleForm" label-width="100px" style="float:left;width:50%;">
+        <el-form-item label="产品" prop="product">
+        <el-select style="width: 300px" :disabled="titleForm.indexOf('查看')!== -1" @change="productSelect" v-model="form.product" placeholder="请选择产品">
+            <el-option
+            v-for="item in productData"
+            :key="item.id"
+            :label="item.name"
+            :value="item.id">
+            </el-option>
+        </el-select>
+        </el-form-item>
         <el-form-item label="数量" prop="num">
-          <el-input style="width: 80px" :disabled="titleForm.indexOf('查看')!== -1" v-model="form.num" autocomplete="off"></el-input>
+        <el-input style="width: 300px" :disabled="titleForm.indexOf('查看')!== -1" v-model="form.num" autocomplete="off"></el-input>
         </el-form-item>
         <el-form-item label="单价" prop="price">
-          <el-input style="width: 100px" :disabled="titleForm.indexOf('查看')!== -1" v-model="form.price" autocomplete="off"></el-input>
+        <el-input style="width: 300px" :disabled="titleForm.indexOf('查看')!== -1" v-model="form.price" autocomplete="off"></el-input>
         </el-form-item>
         <el-form-item label="金额" prop="totalPrice">
-          <el-input style="width: 100px" :disabled="titleForm.indexOf('查看')!== -1" v-model="totalPrice" autocomplete="off"></el-input>
+        <el-input style="width: 300px" :disabled="titleForm.indexOf('查看')!== -1" v-model="totalPrice" autocomplete="off"></el-input>
         </el-form-item>
         <el-form-item>
-          <el-button style="width: 95px;margin-left: 10px;" type="primary" @click="submitAccount_('ruleForm')">添加产品</el-button>
-        </el-form-item>
-        <el-form-item prop="product">
-          <el-tabs v-model="productTabsValue" @tab-click="handleClick" tab-position="left" style="height: 300px;" >
-            <el-tab-pane
-              label="全部"
-              name=""
-            >
-            </el-tab-pane>
-            <el-tab-pane
-              :key="item.name"
-              v-for="(item, index) in productTypeData"
-              :label="item.name"
-              :name="item.name"
-            >
-            </el-tab-pane>
-            <div style="overflow: auto;height: 300px;">
-              <el-button type="primary" plain  style="margin:0 10px 10px 0;"
-              @click="productSelect(item.id)"
-              v-for="item in productData"
-              :key="item.id">{{item.name}}</el-button>
-            </div>
-          </el-tabs>
+        <el-button style="margin-top:20px" type="primary" @click="submitAccount_('ruleForm')">添加产品</el-button>
         </el-form-item>
     </el-form>
     <div style="float:right;width:50%;">
@@ -261,7 +236,6 @@
 
 <script>
 import { customerlist, productlist, consumeRecord, plainConsumeRecord } from "@/api/consumeCheck";
-import { producttypelist } from "@/api/productTypeManage";
 const moment = require('moment');
 
 
@@ -293,20 +267,6 @@ export default {
        callback();
     };
     return {
-      productTabsValue: '',
-      editableTabs: [
-        {name:'1'},
-        {name:'12'},
-        {name:'13'},
-        {name:'14'},
-        {name:'15'},
-        {name:'16'},
-        {name:'17'},
-        {name:'18'},
-        {name:'19'},
-        {name:'10'},
-        {name:'111'},
-      ],
       isDeduction: '2',
       isDeductionOther: '2',
         searchusername:'',
@@ -374,8 +334,7 @@ export default {
       inventory: '',
       customerNo: '',
       cTime: '',
-      userName: sessionStorage.getItem('name'),
-      productTypeData: [],
+      userName: sessionStorage.getItem('name')
     }
   },
   computed:{ 
@@ -392,10 +351,6 @@ export default {
     }
   },
   methods: {
-    handleClick(data) {
-      this.form.product = '';
-      this.getProductlist(data.name)
-    },
     PayfunC() {
       this.loadingAccount = false 
        this.payVisible = false
@@ -815,10 +770,10 @@ export default {
     wordAccount(){
         this.wordVisible = false
     },
-    getProductlist(data) {
+    getProductlist() {
       productlist({"name": '',
         "no": '',
-        "type": data,
+        "type": '',
         "uid": sessionStorage.getItem('uid'),
         "pages": 1,
         "pagesize": '1000'
@@ -829,34 +784,23 @@ export default {
     },
     productSelect(data){
         this.productData.map(item=>{
+          console.log(item.id)
             if(item.id === data){
               console.log(item)
-                this.form.product = data;
                 this.form.productname = item.name;
                 this.form.num = '1';
                 this.form.price = item.price
             }
         })
         console.log(data)
-    },
-    getproducttypelist() {
-      producttypelist({"name": '',
-        "uid": sessionStorage.getItem('uid'),
-        "pages": 1,
-        "pagesize": 1000
-        })
-      .then(r => {
-            this.productTypeData = r.data.data_list;
-        }).catch(() => {});
-    },
+    }
   },
   beforeDestroy() {
     this.$msgbox.close()
  },
 //   message_
   mounted: function() {
-      this.getProductlist('')
-      this.getproducttypelist()
+      this.getProductlist()
       console.log(this.$route.query.phone)
       if(this.$route.query.phone !== undefined){
           this.searchphone = this.$route.query.phone;

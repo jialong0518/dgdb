@@ -1,6 +1,6 @@
 module.exports = {
 
-  title: '多果多贝',
+  title: '多果多贝-测试',
 
   /**
    * @type {boolean} true | false

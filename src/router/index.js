@@ -121,6 +121,22 @@ let constantRoutes = [
       }
     ]
   },
+  
+  {
+    path: '/productTypeManage',
+    component: Layout,
+    redirect: '/productType',
+    name: '/productType',
+    meta: { title: '产品分类管理' },
+    children: [
+      {
+        path: 'productTypeManage',
+        name: 'productTypeManage',
+        component: () => import('@/views/productTypeManage/index'),
+        meta: { title: '产品分类管理' ,icon: 'yy' }
+      }
+    ]
+  },
   {
     path: '/productManage',
     component: Layout,

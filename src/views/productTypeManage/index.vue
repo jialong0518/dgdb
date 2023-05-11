@@ -2,127 +2,44 @@
   <div class="account">
       <el-row :gutter="20" style="padding: 20px;">
     <el-col :span="6">
-        <div style="display: inline-block;width:30%;">姓名：</div>
+        <div style="display: inline-block;width:30%;">分类名称：</div>
         <el-input style="width: 70%" v-model="searchusername" @change="getTableData()" autocomplete="off"></el-input>
     </el-col>
     <el-col :span="6">
-        <div style="display: inline-block;width:30%;">手机号：</div>
-        <el-input style="width: 70%" v-model="searchphone" @change="getTableData()" autocomplete="off"></el-input>
-    </el-col>
-    <el-col :span="6">
-        <div style="display: inline-block;width:30%;">消费时间：</div>
-        <el-date-picker
-        v-model="searchdate"
-        @change="getTableData()"
-        type="date"
-        style="width: 70%"
-        value-format="yyyy-MM-dd"
-        format="yyyy-MM-dd"
-        placeholder="选择日期时间">
-        </el-date-picker>
-    </el-col>
-    <el-col :span="6">
         <el-button type="primary" @click="getTableData()">搜 索</el-button>
-        <el-button type="primary" @click="goList()">会员列表</el-button>
     </el-col>
     </el-row>
+    <div style="padding: 15px;overflow: hidden;">
+      <el-button type="primary"  style="float:right;" @click="addAccountButt('ruleForm')">添加分类</el-button>
+    </div>
     <div style="padding: 0 20px">
         <el-table
     :data="tableData"
     border
-    fixed
     style="width: 100%;border-radius: 10px;">
     <el-table-column
-      prop="no"
-      width="155"
-      label="会员编号">
-    </el-table-column>
-    <el-table-column
       prop="name"
-      width="100"
-      label="姓名">
-    </el-table-column>
-    <el-table-column
-      prop="phone"
-      width="110"
-      label="手机号">
-    </el-table-column>
-    <el-table-column
-      prop="oldBalance"
-      width="100"
-      label="消费前余额">
-    </el-table-column>
-    <el-table-column
-      prop="oldOtherBalance"
-      width="100"
-      label="消费前其他优惠">
-    </el-table-column>
-    <el-table-column
-      prop="inventory"
-      width="250"
-      label="购买商品明细">
-      <template slot-scope="scope">
-        <div :key="index" style="margin-bottom: 5px;" v-for="(item, index) in JSON.parse(scope.row.inventoryList)">
-        {{`${item.productname}*${item.num}（¥${item.price}）`}}
-        </div>
-      </template>
-    </el-table-column>
-    <el-table-column
-      prop="subTotal"
-      width="100"
-      label="小计">
-    </el-table-column>
-    <el-table-column
-      prop="reduceBalance"
-      width="100"
-      label="优惠">
-    </el-table-column>
-    <el-table-column
-      prop="buckleBalance"
-      width="100"
-      label="余额抵扣">
-    </el-table-column>
-    <el-table-column
-      prop="buckleOtherBalance"
-      width="100"
-      label="其他优惠抵扣">
-    </el-table-column>
-    <el-table-column
-      prop="shouldBalance"
-      width="100"
-      label="实付金额">
-    </el-table-column>
-    <el-table-column
-      prop="newBalance"
-      width="100"
-      label="账户余额">
-    </el-table-column>
-    <el-table-column
-      prop="newOtherBalance"
-      width="100"
-      label="其他优惠">
-    </el-table-column>
-    <el-table-column
-      prop="date"
-      width="100"
-      label="消费时间">
+      label="分类名称">
     </el-table-column>
     <el-table-column
       prop="remarks"
-      min-width="300"
       label="备注">
     </el-table-column>
     <el-table-column
-      prop="operator"
-      width="70"
-      label="操作人">
+      prop="date"
+      label="操作时间">
     </el-table-column>
     <el-table-column
-    fixed="right"
-    width="50"
       label="操作">
       <template slot-scope="scope">
-        <el-button  @click="printFun(scope.row)" type="text" size="small">打印</el-button>
+        <el-button  @click="seeAccountButt(scope.row)" type="text" size="small">查看</el-button>
+        <el-button  type="text" @click="editAccountButt(scope.row)" size="small">编辑</el-button>
+        <el-popconfirm
+            title="是否确定删除该分类？"
+            @onConfirm="accountDel(scope.row)" 
+        >
+        <el-button style="margin: 0 10px;" slot="reference"  type="text" size="small">删除</el-button>
+        </el-popconfirm>
       </template>
     </el-table-column>
   </el-table>
@@ -140,30 +57,57 @@
       :total="totalPage">
     </el-pagination>
   </div> 
+  <el-dialog :close-on-click-modal="false" :title="titleForm" :show-close="false" :visible.sync="dialogAccountVisible">
+  <el-form :model="form" :rules="rulesAccount" ref="ruleForm" label-width="100px">
+    <el-form-item label="分类名称" prop="name">
+      <el-input style="width: 300px" :disabled="titleForm.indexOf('查看')!== -1" v-model="form.name" autocomplete="off"></el-input>
+    </el-form-item>
+    <el-form-item label="备注" prop="remarks">
+      <el-input style="width: 300px" type="textarea" :rows="4":disabled="titleForm.indexOf('查看')!== -1" v-model="form.remarks" autocomplete="off"></el-input>
+    </el-form-item>
+  </el-form>
+  <div slot="footer" class="dialog-footer">
+    <el-button @click="cancelSubmit('ruleForm')">取 消</el-button>
+    <el-button :disabled="titleForm.indexOf('查看')!== -1" :loading="loadingAccount" type="primary" @click="submitAccount('ruleForm')">确 定</el-button>
+  </div>
+</el-dialog>
   </div>
 </template>
 
 <script>
-import { consumeRecordList } from "@/api/consumeCheck";
+import { producttypelist, addProductType, producttypedel, producttypeedit } from "@/api/productTypeManage";
 
 
 export default {
   name: 'Login',
   data() {
+    let checkamount = (rule, value, callback) => {
+      let val = Number(value)
+      if(value === ''){
+        callback(new Error('请填写产品价格'));
+        return
+      }
+      if(typeof val !== 'number' || value.indexOf('-')!= -1){
+        callback(new Error('请填写产品价格'));
+        return
+      }
+      if (isNaN(val)) {
+        callback(new Error('请填写产品价格'));
+        return
+      }
+       callback();
+    };
     return {
         searchusername:'',
-        searchphone:'',
+        searchno:'',
         searchrolename:'',
-        searchdate:'',
         currentPage: 1,
       totalPage: 0,
       pageSize: 10,
       dialogAccountVisible: false,
       form: {
-        account: '',
+        remarks: '',
         name: '',
-        phone: '',
-        role: ''
       },
       message_: null,
       message1_:null,
@@ -171,12 +115,12 @@ export default {
       titleForm:'',
       rights_list: {},
       rulesAccount: {
-        name: [
-            { required: true, message: '请填写名字', trigger: 'blur' }
+        remarks: [
+            { required: false}
         ],
-        phone: [
-            { required: true, message: '请填写电话', trigger: 'blur' }
-        ]
+        name: [
+            { required: true, message: '请填写产品名称', trigger: 'blur' }
+        ],
       },
       loadingAccount: false,
       loginForm: {
@@ -202,31 +146,7 @@ export default {
     }
   },
   methods: {
-    goList(){
-      if(this.$route.query.phone !== undefined){
-          this.$router.push({
-                path:'/customerManage/customerManage',
-                query:{phone: this.$route.query.phone}
-        });
-      }else{
-        this.$router.push({
-                path:'/customerManage/customerManage'
-        });
-      }
-    },
-    printFun(data){
-        let arr = JSON.parse(data.inventoryList)
-        let totalNum = 0;
-        arr.map(item=>{
-            totalNum = Number(item.num) + totalNum
-        })
-        data.totalNum = totalNum
-        sessionStorage.setItem('printData',JSON.stringify(data))
-        this.$router.push({
-                            path:'/print'
-                });
-    },
-    sizeChange(val){
+      sizeChange(val){
         this.currentPage = 1;
         this.pageSize = val;
         this.getTableData()
@@ -263,21 +183,25 @@ export default {
     },
     // this.$refs[formName].resetFields();
     seeAccountButt(data) {
-      this.titleForm = '查看用户'
+      this.titleForm = '查看产品'
       this.accountId = data.id
-      this.getuserbind()
+      this.form.remarks = data.remarks
+      this.form.name = data.name
+      this.dialogAccountVisible = true
     },
     editAccountButt(data) {
       this.accountId = data.id
-      this.titleForm = '编辑用户'
-      this.getuserbind()
+      this.titleForm = '编辑产品'
+      this.form.remarks = data.remarks
+      this.form.name = data.name
+      this.dialogAccountVisible = true
     },
     addAccountButt(formName) {
       this.accountId = '';
-      this.titleForm = '添加用户'
+      this.titleForm = '添加产品'
       this.dialogAccountVisible = true
     },
-    cancelSubmit() {
+    cancelSubmit(formName) {
       this.accountId = '';
       this.dialogAccountVisible = false;
       this.$refs[formName].resetFields();
@@ -300,10 +224,11 @@ export default {
     },
     addDataFun(formName1){
       this.loadingAccount = true
-      userAdd({
+      addProductType({
               "name": this.form.name,
-              "phone": this.form.phone,
-              "uid": sessionStorage.getItem('uid')})
+              "remarks": this.form.remarks,
+              "uid": sessionStorage.getItem('uid'),
+              })
             .then(r => {
               this.loadingAccount = false
               this.dialogAccountVisible = false
@@ -311,9 +236,7 @@ export default {
               this.account = this.form.account
               this.$refs[formName1].resetFields();
               // this.wordVisible = true
-              console.log('123')
               this.getTableData()
-              this.openHTML(r.info)
               setTimeout(()=>{
                 // this.wordVisible = true
                 console.log('123')
@@ -326,11 +249,11 @@ export default {
     },
     editDataFun(formName) {
       this.loadingAccount = true
-      useredit({
+      producttypeedit({
               "name": this.form.name,
-              "id": this.accountId,
-              "phone": this.form.phone,
-              "uid": sessionStorage.getItem('uid')})
+              "uid": sessionStorage.getItem('uid'),
+              "remarks": this.form.remarks,
+              "id": this.accountId,})
             .then(r => {
               this.loadingAccount = false
               this.dialogAccountVisible = false
@@ -341,22 +264,8 @@ export default {
               this.loadingAccount = false
             });
     },
-    resetAccount(data) {
-        passwordreset({
-            "id": data.id,
-            "uid": sessionStorage.getItem('uid')})
-            .then(r => {
-              console.log(r)
-              this.word = r.info
-              this.account = data.username
-              this.openHTML(r.info)
-              // this.wordVisible = true
-            })
-            .catch(() => {
-            });      
-    },
     accountDel(data) {
-      userdel({
+      producttypedel({
             "id": data.id,
             "uid": sessionStorage.getItem('uid')})
             .then(r => {
@@ -371,9 +280,7 @@ export default {
             }); 
     },
     getTableData() {
-      consumeRecordList({"name": this.searchusername,
-        "phone": this.searchphone,
-        "date": this.searchdate == null?'':this.searchdate,
+      producttypelist({"name": this.searchusername,
         "uid": sessionStorage.getItem('uid'),
         "pages":this.currentPage,
         "pagesize":this.pageSize
@@ -382,56 +289,13 @@ export default {
             this.tableData = r.data.data_list;
             this.totalPage = r.data.datacount
         }).catch(() => {});
-    },
-    getuserbind() {
-      userbind({
-        "id": this.accountId,
-        "uid": sessionStorage.getItem('uid')})
-      .then(r => {
-        console.log(r.data)
-      this.form.phone = r.data.phone;
-      this.form.name = r.data.name;
-      this.dialogAccountVisible = true
-
-        }).catch(() => {});
-    },
-    openHTML(word) {
-        
-    },
-    wordSubmit(){
-        let that = this
-        let text = `账号：${that.account}，密码：${that.word}`
-        let save = function (e) {
-                //设置需要复制模板的内容账号：123，密码：rxw10m
-                e.clipboardData.setData('text/plain',text);
-                //阻止默认行为
-                e.preventDefault();
-            }
-            // h5监听copy事件，调用save函数保存到模板中
-            document.addEventListener('copy',save);
-            // 调用右键复制功能
-            document.execCommand('copy');
-            //移除copy事件
-            document.removeEventListener('copy',save);
-            this.message1_ = this.$message({
-                message: '复制成功！',
-                type: 'success'
-                });
-    },
-    wordAccount(){
-        this.wordVisible = false
-    },
+    }
   },
   beforeDestroy(){
       this.message1_.close()
   },
 //   message_
   mounted: function() {
-    if(this.$route.query.phone !== undefined){
-          this.searchphone = this.$route.query.phone;
-          this.getTableData();
-          return
-      }
       this.getTableData()
   }
 }

@@ -43,7 +43,9 @@ export default {
       pint(){window.print({silent: false, printBackground: false})},
       goBack(){
           sessionStorage.removeItem('printData')
-          this.$router.go(-1)
+          this.$router.push({
+                            path:'/consumeCheck/consumeCheck'
+                });
       }
   },
   beforeDestroy(){

@@ -3,14 +3,26 @@
       <el-row :gutter="20" style="padding: 20px;">
     <el-col :span="6">
         <div style="display: inline-block;width:30%;">产品名称：</div>
-        <el-input style="width: 70%" v-model="searchusername" @change="getTableData()" autocomplete="off"></el-input>
+        <el-input style="width: 70%" v-model="searchusername" @change="getTableData(1)" autocomplete="off"></el-input>
     </el-col>
     <el-col :span="6">
         <div style="display: inline-block;width:30%;">产品编码：</div>
-        <el-input style="width: 70%" v-model="searchno" @change="getTableData()" autocomplete="off"></el-input>
+        <el-input style="width: 70%" v-model="searchno" @change="getTableData(1)" autocomplete="off"></el-input>
     </el-col>
     <el-col :span="6">
-        <el-button type="primary" @click="getTableData()">搜 索</el-button>
+        <div style="display: inline-block;width:30%;">产品分类：</div>
+        <el-select v-model="searchType" style="width: 70%" @change="getTableData(1)" clearable  placeholder="请选择产品分类">
+          <el-option
+            v-for="item in productTypeData"
+            :key="item.name"
+            :label="item.name"
+            :value="item.name">
+          </el-option>
+        </el-select>
+    </el-col>
+    
+    <el-col :span="6">
+        <el-button type="primary" @click="getTableData(1)">搜 索</el-button>
     </el-col>
     </el-row>
     <div style="padding: 15px;overflow: hidden;">
@@ -28,6 +40,10 @@
     <el-table-column
       prop="name"
       label="产品名称">
+    </el-table-column>
+    <el-table-column
+      prop="type"
+      label="产品分类">
     </el-table-column>
     <el-table-column
       prop="price"
@@ -78,6 +94,16 @@
     <el-form-item label="产品名称" prop="name">
       <el-input style="width: 300px" :disabled="titleForm.indexOf('查看')!== -1" v-model="form.name" autocomplete="off"></el-input>
     </el-form-item>
+    <el-form-item label="产品分类" prop="type">
+      <el-select style="width: 300px" :disabled="titleForm.indexOf('查看')!== -1" v-model="form.type" placeholder="请选择产品分类">
+          <el-option
+            v-for="item in productTypeData"
+            :key="item.name"
+            :label="item.name"
+            :value="item.name">
+          </el-option>
+      </el-select>
+    </el-form-item>
     <el-form-item label="价格" prop="price">
       <el-input style="width: 300px" :disabled="titleForm.indexOf('查看')!== -1" v-model="form.price" autocomplete="off"></el-input>
     </el-form-item>
@@ -92,7 +118,7 @@
 
 <script>
 import { productlist, addProduct, productbind, productdel, productedit, productTop } from "@/api/productManage";
-
+import { producttypelist } from "@/api/productTypeManage";
 
 export default {
   name: 'Login',
@@ -117,6 +143,7 @@ export default {
         searchusername:'',
         searchno:'',
         searchrolename:'',
+        searchType: '',
         currentPage: 1,
       totalPage: 0,
       pageSize: 10,
@@ -125,6 +152,7 @@ export default {
         no: '',
         name: '',
         price: '',
+        type: ''
       },
       message_: null,
       message1_:null,
@@ -140,7 +168,10 @@ export default {
         ],
         price: [
             { required: true, validator: checkamount, trigger: 'blur' }
-        ]
+        ],
+        type: [
+            { required: true, message: '请选择产品分类', trigger: 'blur' }
+        ],
       },
       loadingAccount: false,
       loginForm: {
@@ -151,6 +182,7 @@ export default {
       passwordType: 'password',
       redirect: undefined,
       tableData: [],
+      productTypeData: [],
       accountId: '',
       wordVisible: false,
       word:'',
@@ -214,6 +246,10 @@ export default {
     },
     addAccountButt(formName) {
       this.accountId = '';
+      this.form.no = '';
+      this.form.name = '';
+      this.form.price = '';
+      this.form.type = '';
       this.titleForm = '添加产品'
       this.dialogAccountVisible = true
     },
@@ -244,7 +280,8 @@ export default {
               "name": this.form.name,
               // "no": this.form.no,
               "uid": sessionStorage.getItem('uid'),
-              "price": this.form.price
+              "price": this.form.price,
+              "type": this.form.type
               })
             .then(r => {
               this.loadingAccount = false
@@ -252,15 +289,8 @@ export default {
               this.word = r.info
               this.account = this.form.account
               this.$refs[formName1].resetFields();
-              // this.wordVisible = true
-              console.log('123')
+              this.currentPage = 1;
               this.getTableData()
-              this.openHTML(r.info)
-              setTimeout(()=>{
-                // this.wordVisible = true
-                console.log('123')
-              },500)
-              
             })
             .catch(() => {
               this.loadingAccount = false
@@ -273,11 +303,13 @@ export default {
               // "no": this.form.no,
               "uid": sessionStorage.getItem('uid'),
               "price": this.form.price,
+              "type": this.form.type,
               "id": this.accountId,})
             .then(r => {
               this.loadingAccount = false
               this.dialogAccountVisible = false
               this.$refs[formName].resetFields();
+              this.currentPage = 1;
               this.getTableData()
             })
             .catch(() => {
@@ -290,25 +322,12 @@ export default {
               "uid": sessionStorage.getItem('uid'),
               "id": data.id})
             .then(r => {
+              this.currentPage = 1;
               this.getTableData()
             })
             .catch(() => {
               this.loadingAccount = false
             });
-    },
-    resetAccount(data) {
-        passwordreset({
-            "id": data.id,
-            "uid": sessionStorage.getItem('uid')})
-            .then(r => {
-              console.log(r)
-              this.word = r.info
-              this.account = data.username
-              this.openHTML(r.info)
-              // this.wordVisible = true
-            })
-            .catch(() => {
-            });      
     },
     accountDel(data) {
       productdel({
@@ -316,6 +335,7 @@ export default {
             "uid": sessionStorage.getItem('uid')})
             .then(r => {
               console.log(r)
+              this.currentPage = 1;
               this.getTableData()
               this.$message({
                 message: '删除成功！',
@@ -325,9 +345,13 @@ export default {
             .catch(() => {
             }); 
     },
-    getTableData() {
+    getTableData(data) {
+      if(data) {
+        this.currentPage = 1;
+      }
       productlist({"name": this.searchusername,
         "no": this.searchno,
+        "type": this.searchType,
         "uid": sessionStorage.getItem('uid'),
         "pages":this.currentPage,
         "pagesize":this.pageSize
@@ -337,6 +361,17 @@ export default {
             this.totalPage = r.data.datacount
         }).catch(() => {});
     },
+    getproducttypelist() {
+      producttypelist({"name": '',
+        "uid": sessionStorage.getItem('uid'),
+        "pages": 1,
+        "pagesize": 1000
+        })
+      .then(r => {
+            this.productTypeData = r.data.data_list;
+        }).catch(() => {});
+    },
+    
     getuserbind() {
       productbind({
         "id": this.accountId,
@@ -346,35 +381,10 @@ export default {
       this.form.no = r.data.no;
       this.form.name = r.data.name;
       this.form.price = r.data.price;
+      this.form.type = r.data.type;
       this.dialogAccountVisible = true
 
         }).catch(() => {});
-    },
-    openHTML(word) {
-        
-    },
-    wordSubmit(){
-        let that = this
-        let text = `账号：${that.account}，密码：${that.word}`
-        let save = function (e) {
-                //设置需要复制模板的内容账号：123，密码：rxw10m
-                e.clipboardData.setData('text/plain',text);
-                //阻止默认行为
-                e.preventDefault();
-            }
-            // h5监听copy事件，调用save函数保存到模板中
-            document.addEventListener('copy',save);
-            // 调用右键复制功能
-            document.execCommand('copy');
-            //移除copy事件
-            document.removeEventListener('copy',save);
-            this.message1_ = this.$message({
-                message: '复制成功！',
-                type: 'success'
-                });
-    },
-    wordAccount(){
-        this.wordVisible = false
     },
   },
   beforeDestroy(){
@@ -383,6 +393,7 @@ export default {
 //   message_
   mounted: function() {
       this.getTableData()
+      this.getproducttypelist()
   }
 }
 </script>
